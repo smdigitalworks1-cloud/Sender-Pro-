@@ -244,7 +244,6 @@ function _doInit(guid, userId, isSuper) {
         if (isStuck) {
           // Delete the stuck session folder to force a clean restart without losing db contacts
           const fs = require('fs');
-          const path = require('path');
           const sessionPath = path.join(__dirname, '.wwebjs_auth', `session-${guid}`);
           try {
             if (fs.existsSync(sessionPath)) {
