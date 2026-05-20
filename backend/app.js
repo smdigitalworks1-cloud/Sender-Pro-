@@ -4,6 +4,12 @@ const path = require('path');
 require('dotenv').config();
 
 const app = express();
+const { sequelize } = require('./models');
+
+// ── Database Connection Check ────────────────────────────────
+sequelize.authenticate()
+    .then(() => console.log('✅ Database connected (Express App)'))
+    .catch(err => console.error('❌ Database connection failed (Express App):', err.message));
 
 app.use(cors({ origin: '*' }));
 app.use(express.json({ limit: '50mb' }));
