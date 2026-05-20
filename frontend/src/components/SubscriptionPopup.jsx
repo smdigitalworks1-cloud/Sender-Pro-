@@ -97,9 +97,6 @@ export default function SubscriptionPopup({ onClose }) {
                         </button>
                     )}
 
-                    <button onClick={onClose} style={{
-                        marginTop: 14, fontSize: 12, color: 'var(--text3)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline'
-                    }}>Close</button>
                 </div>
             </div>
             <style>{`

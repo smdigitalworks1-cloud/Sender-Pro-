@@ -40,7 +40,7 @@ router.post('/', protect, async (req, res) => {
                       <h3>Issue Description:</h3>
                       <p style="white-space: pre-wrap; background: #fafafa; padding: 15px; border-left: 4px solid #7c3aed;">${message}</p>
                       <br/>
-                      <a href="${process.env.FRONTEND_URL || 'https://smonlineservice.shop'}/login" style="display: inline-block; padding: 10px 20px; background: #7c3aed; color: #fff; text-decoration: none; border-radius: 6px; font-weight: bold;">Login to Admin Portal to Reply</a>
+                      <a href="${process.env.FRONTEND_URL || 'https://senderpro.smdigitalworks.com'}/login" style="display: inline-block; padding: 10px 20px; background: #7c3aed; color: #fff; text-decoration: none; border-radius: 6px; font-weight: bold;">Login to Admin Portal to Reply</a>
                     </div>
                 `
             });

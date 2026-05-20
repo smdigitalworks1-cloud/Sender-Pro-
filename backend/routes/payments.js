@@ -10,10 +10,13 @@ const syncToSheets = require('../utils/syncSheets');
 const syncPayments = require('../utils/syncPayments');
 const router = express.Router();
 
-const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID,
-    key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
+let razorpay = null;
+if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
+    razorpay = new Razorpay({
+        key_id: process.env.RAZORPAY_KEY_ID,
+        key_secret: process.env.RAZORPAY_KEY_SECRET,
+    });
+}
 
 // ── Plans ────────────────────────────────────────────────────────
 const PLANS_FILE = path.join(__dirname, '../data/plans.json');
@@ -130,6 +133,8 @@ router.post('/create-order', protect, async (req, res) => {
         const { plan } = req.body;
         const planData = PLANS[plan];
         if (!planData) return res.status(400).json({ message: 'Invalid plan' });
+
+        if (!razorpay) return res.status(500).json({ message: 'Razorpay keys are not configured' });
 
         const order = await razorpay.orders.create({
             amount: planData.amount,

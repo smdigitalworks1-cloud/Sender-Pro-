@@ -12,9 +12,9 @@ param(
     [switch]$FrontendOnly
 )
 
-$VPS_HOST = "root@smonlineservice.shop"
-$VPS_PATH = "/var/www/smonlineservice"
-$LOCAL = "c:\Users\sathi\Downloads\sender-pro"
+$VPS_HOST = "root@76.13.243.183"
+$VPS_PATH = "/var/www/sender-pro"
+$LOCAL = $PSScriptRoot
 $ErrorCount = 0
 
 # ── Helper Functions ──────────────────────────────────────────
@@ -54,7 +54,7 @@ function SCP-Dir($local, $remote) {
 Clear-Host
 Write-Host "=============================================" -ForegroundColor Cyan
 Write-Host "   Sender Pro - Smart Deploy v2.0"            -ForegroundColor Cyan
-Write-Host "   smonlineservice.shop"                      -ForegroundColor Cyan
+Write-Host "   senderpro.smdigitalworks.com"                      -ForegroundColor Cyan
 Write-Host "=============================================" -ForegroundColor Cyan
 
 $modeLabel = "Full Deploy"
@@ -248,12 +248,12 @@ Write-Host "=============================================" -ForegroundColor Cyan
 if ($ErrorCount -gt 0) {
     Write-Host "  WARNING: Deploy done with $ErrorCount issue(s)!" -ForegroundColor Red
     Write-Host "  SSH into VPS to debug:"                          -ForegroundColor Yellow
-    Write-Host "    ssh root@smonlineservice.shop"                 -ForegroundColor White
+    Write-Host "    ssh root@senderpro.smdigitalworks.com"                 -ForegroundColor White
     Write-Host "    pm2 logs sender-pro"                           -ForegroundColor White
 }
 else {
     Write-Host "  SUCCESS: Deploy complete, no errors!"            -ForegroundColor Green
-    Write-Host "  Live: https://smonlineservice.shop"              -ForegroundColor Cyan
+    Write-Host "  Live: https://senderpro.smdigitalworks.com"              -ForegroundColor Cyan
 }
 
 Write-Host "  Time: $(Get-Date -Format 'HH:mm:ss')"               -ForegroundColor Gray

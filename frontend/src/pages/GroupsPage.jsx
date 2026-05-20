@@ -66,7 +66,7 @@ export default function GroupsPage() {
     toast.success('Downloaded as CSV');
   };
 
-  const filteredGroups = groups.filter(g => g.name.toLowerCase().includes(search.toLowerCase()));
+  const filteredGroups = (groups || []).filter(g => (g?.name || 'Unknown').toLowerCase().includes((search || '').toLowerCase()));
 
   return (
     <div className="fade-in">
@@ -124,7 +124,7 @@ export default function GroupsPage() {
                         <Download size={13} /> {saving[g.id] ? 'Saving...' : 'Save to Contacts'}
                       </button>
                       <button className="btn btn-ghost" style={{ fontSize: 12, padding: '6px 12px', border: '1px solid var(--border)' }}
-                        onClick={e => { e.stopPropagation(); exportToCSV(g.id, g.name); }}
+                        onClick={e => { e.stopPropagation(); exportToCSV(g.id, (g.name || 'Unknown_Group')); }}
                         disabled={!parts[g.id]}>
                         <Download size={13} /> Export CSV
                       </button>

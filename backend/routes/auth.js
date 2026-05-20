@@ -19,13 +19,10 @@ router.post('/register', async (req, res) => {
     if (await User.findOne({ where: { email } }))
       return res.status(400).json({ message: 'Email already registered' });
 
-    const expiry = new Date();
-    expiry.setDate(expiry.getDate() + 7);
-
     const user = await User.create({
       name, email, password, whatsappNumber,
-      subStatus: 'trial',
-      subExpiry: expiry
+      subStatus: 'none',
+      subExpiry: null
     });
 
     // Sync to Google Sheets (Async)
@@ -84,12 +81,13 @@ router.post('/login', async (req, res) => {
     await user.save();
 
     // Send OTP Email
-    await sendEmail({
+    console.log(`\n🔐 LOGIN OTP for ${user.email}: ${otp} (Expires in 5 mins)\n`);
+    sendEmail({
       email: user.email,
       subject: 'Login OTP - Sender Pro',
       message: `Your login OTP is: ${otp}. It will expire in 5 minutes.`,
       html: `<h3>Login Verification</h3><p>Your login OTP is: <strong style="font-size: 24px; color: #7c3aed;">${otp}</strong></p><p>This code will expire in 5 minutes.</p>`
-    });
+    }).catch(e => console.error('OTP email send failed (check SMTP config):', e.message));
 
     res.json({ message: 'OTP sent to email', requiresOtp: true });
   } catch (e) {
@@ -143,12 +141,13 @@ router.post('/admin-login', async (req, res) => {
     await admin.save();
 
     // Send OTP Email
-    await sendEmail({
+    console.log(`\n👑 ADMIN LOGIN OTP for ${admin.email}: ${otp} (Expires in 5 mins)\n`);
+    sendEmail({
       email: admin.email,
       subject: 'Super Admin Login OTP',
       message: `Your Super Admin login OTP is: ${otp}.`,
       html: `<h3>Admin Verification</h3><p>Your Super Admin login OTP is: <strong style="font-size: 24px; color: #f59e0b;">${otp}</strong></p><p>This code will expire in 5 minutes.</p>`
-    });
+    }).catch(e => console.error('Admin OTP email send failed:', e.message));
 
     res.json({ message: 'OTP sent to email', requiresOtp: true });
   } catch (e) {

@@ -36,7 +36,13 @@ export default function Layout() {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
 
-  const needsSubscription = !isSubscribed && !FREE_PAGES.some(p => location.pathname.startsWith(p));
+  // Bypass subscription requirement for superadmins and admins
+  const needsSubscription = 
+    user?.role !== 'superadmin' && 
+    user?.role !== 'admin' && 
+    !user?.isAdmin &&
+    !isSubscribed && 
+    !FREE_PAGES.some(p => location.pathname.startsWith(p));
 
   const handleLogout = () => { logout(); navigate('/login'); };
 
@@ -134,12 +140,12 @@ export default function Layout() {
               <div style={{
                 display: 'inline-flex', alignItems: 'center', gap: 6,
                 padding: '4px 8px', borderRadius: 20,
-                background: localStorage.getItem('wa_phone') ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                color: localStorage.getItem('wa_phone') ? '#22c55e' : '#ef4444',
+                background: user?.whatsappNumber ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                color: user?.whatsappNumber ? '#22c55e' : '#ef4444',
                 fontSize: 10, fontWeight: 700
               }}>
-                <div style={{ width: 6, height: 6, borderRadius: '50%', background: localStorage.getItem('wa_phone') ? '#22c55e' : '#ef4444' }} />
-                {localStorage.getItem('wa_phone') ? `+${localStorage.getItem('wa_phone')}` : 'Not Connected'}
+                <div style={{ width: 6, height: 6, borderRadius: '50%', background: user?.whatsappNumber ? '#22c55e' : '#ef4444' }} />
+                {user?.whatsappNumber ? `+${user.whatsappNumber}` : 'Not Connected'}
               </div>
             </div>
           )}

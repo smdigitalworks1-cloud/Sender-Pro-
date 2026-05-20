@@ -3,10 +3,18 @@ echo "======================================"
 echo " Sender Pro VPS Setup Script"
 echo "======================================"
 
+cd /var/www/sender-pro
+
+# Step 0: Install dependencies on the VPS
+echo "📦 Step 0: Installing backend dependencies..."
+cd backend
+npm install --production --silent
+cd ..
+
 # Step 1: Install missing Chromium libraries
 echo ""
 echo "📦 Step 1: Installing Chromium dependencies..."
-apt-get install -y \
+apt-get update && apt-get install -y \
   libatk1.0-0t64 libatk-bridge2.0-0t64 libcups2t64 \
   libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 \
   libxfixes3 libxrandr2 libgbm1 libasound2t64 \
@@ -18,37 +26,33 @@ echo "✅ Chromium dependencies installed!"
 # Step 2: Clear stale WhatsApp sessions
 echo ""
 echo "🧹 Step 2: Clearing stale WhatsApp sessions..."
-rm -rf /var/www/smonlineservice/backend/.wwebjs_auth
-rm -rf /var/www/smonlineservice/backend/.wwebjs_cache
+rm -rf /var/www/sender-pro/backend/.wwebjs_auth
+rm -rf /var/www/sender-pro/backend/.wwebjs_cache
 echo "✅ Sessions cleared!"
 
-# Step 3: Restart PM2
+# Step 3: PM2 setup/restart
 echo ""
-echo "🔄 Step 3: Restarting sender-pro..."
-pm2 restart sender-pro
-echo "✅ App restarted!"
+echo "🔄 Step 3: Managing PM2 process..."
+cd backend
+if pm2 list | grep -q "sender-pro"; then
+  pm2 restart sender-pro --update-env
+else
+  pm2 start server.js --name sender-pro
+fi
+echo "✅ PM2 process ready!"
 
 # Step 4: Wait for server to start
 echo ""
 echo "⏳ Waiting 6 seconds for server to start..."
 sleep 6
 
-# Step 5: Create admin user
+# Step 5: Check Nginx
 echo ""
-echo "👤 Step 5: Creating admin user..."
-RESULT=$(curl -s -X POST https://smonlineservice.shop/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Admin","email":"admin@smonlineservice.shop","password":"Admin@123"}')
-echo "API Response: $RESULT"
-
-# Step 6: Show logs
-echo ""
-echo "📋 Step 6: PM2 Logs:"
-pm2 logs sender-pro --lines 20 --nostream
+echo "🌐 Step 5: Checking Nginx..."
+nginx -t && systemctl reload nginx
 
 echo ""
 echo "======================================"
 echo " ✅ Setup Complete!"
-echo " Login: admin@smonlineservice.shop"
-echo " Pass:  Admin@123"
+echo " Live at: http://senderpro.smdigitalworks.com"
 echo "======================================"

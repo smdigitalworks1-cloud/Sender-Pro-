@@ -113,14 +113,19 @@ export default function CampaignsPage() {
   };
 
   const downloadReport = (campaign) => {
-    if (!campaign.results || campaign.results.length === 0) {
-      return toast.error('No detailed results recorded for this campaign (try restarting it).');
+    // results may be stored as JSON string in DB — safely parse it
+    let results = campaign.results;
+    if (typeof results === 'string') {
+      try { results = JSON.parse(results); } catch { results = []; }
+    }
+    if (!Array.isArray(results) || results.length === 0) {
+      return toast.error('No detailed results recorded for this campaign.');
     }
 
     const headers = ['Phone', 'Name', 'Status', 'Time', 'Error'];
     const csvContent = [
       headers.join(','),
-      ...campaign.results.map(r =>
+      ...results.map(r =>
         `"${r.phone || ''}","${r.name || ''}","${r.status || ''}","${r.time ? new Date(r.time).toLocaleString() : ''}","${(r.error || '').replace(/"/g, '""')}"`
       )
     ].join('\n');
@@ -130,6 +135,15 @@ export default function CampaignsPage() {
     link.href = URL.createObjectURL(blob);
     link.download = `report_${campaign.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
+  };
+
+  // Safely parse results from DB (may be JSON string or array)
+  const parseResults = (results) => {
+    if (Array.isArray(results)) return results;
+    if (typeof results === 'string') {
+      try { return JSON.parse(results); } catch { return []; }
+    }
+    return [];
   };
 
   const groups = [...new Set(contacts.map(c => c.group))];
@@ -199,7 +213,7 @@ export default function CampaignsPage() {
                       <RotateCcw size={13} /> Resend
                     </button>
                   )}
-                  {(c.status === 'completed' || c.status === 'failed') && c.results && c.results.length > 0 && (
+                  {(c.status === 'completed' || c.status === 'failed') && parseResults(c.results).length > 0 && (
                     <button className="btn btn-secondary" style={{ padding: '7px 14px', fontSize: 12, background: 'rgba(34,197,94,0.1)', color: '#22c55e', borderColor: 'rgba(34,197,94,0.3)' }} onClick={(e) => { e.stopPropagation(); downloadReport(c); }}>
                       <Download size={13} /> Report
                     </button>
@@ -244,7 +258,7 @@ export default function CampaignsPage() {
 
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
                 <h4 style={{ fontSize: 14, color: 'var(--text)' }}>Delivery Log ({selectedCampaign.results?.length || 0} numbers)</h4>
-                {(selectedCampaign.status === 'completed' || selectedCampaign.status === 'failed') && selectedCampaign.results && selectedCampaign.results.length > 0 && (
+                {(selectedCampaign.status === 'completed' || selectedCampaign.status === 'failed') && parseResults(selectedCampaign.results).length > 0 && (
                   <button className="btn btn-secondary" style={{ padding: '6px 14px', fontSize: 12, background: 'rgba(34,197,94,0.1)', color: '#22c55e', borderColor: 'rgba(34,197,94,0.3)' }} onClick={(e) => { e.stopPropagation(); downloadReport(selectedCampaign); }}>
                     <Download size={13} /> Export Excel/CSV
                   </button>
@@ -262,8 +276,8 @@ export default function CampaignsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {selectedCampaign.results && selectedCampaign.results.length > 0 ? (
-                      selectedCampaign.results.map((r, i) => (
+                    {parseResults(selectedCampaign.results).length > 0 ? (
+                      parseResults(selectedCampaign.results).map((r, i) => (
                         <tr key={i} style={{ background: r.status === 'failed' ? 'rgba(239, 68, 68, 0.05)' : 'transparent' }}>
                           <td style={{ fontWeight: 600 }}>{r.phone}</td>
                           <td style={{ color: 'var(--text2)' }}>{r.name || 'Unknown'}</td>

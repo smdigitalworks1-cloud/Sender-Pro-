@@ -24,6 +24,14 @@ app.use((req, res, next) => {
 });
 app.use('/uploads', express.static('uploads'));
 
+// ── Ensure uploads directory exists ───────────────────────────
+const fs = require('fs');
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+  console.log('📁 Created uploads directory');
+}
+
 // ── Global Error Catching for Puppeteer / Whatsapp-web.js Unhandled Errors
 process.on('uncaughtException', (err) => {
   console.error('🔥 Global Uncaught Exception (ignored):', err.message);
@@ -46,6 +54,38 @@ sequelize.sync({ alter: true })
       });
       console.log('👑 Default SuperAdmin seeded: smdigitalworks1@gmail.com / smdigitalworks');
     }
+
+    // 🔥 Create Shadow User to satisfy foreign key constraints:
+    // MySQL foreign keys on (contacts, campaigns) check the `Users` table. 
+    // SuperAdmin ID doesn't normally exist there, which triggers a crash on save.
+    const { User } = require('./models');
+    try {
+      const sa = await SuperAdmin.findOne({ where: { email: 'smdigitalworks1@gmail.com' } });
+      if (sa) {
+         const shadowUser = await User.findByPk(sa.id);
+         if (!shadowUser) {
+           // Shadow user for the Super Admin
+           await User.create({
+             id: sa.id,
+             name: 'Super Admin',
+             email: 'sa_shadow_system_admin@smdigitalworks.com',
+             password: 'shadow_password_do_not_use123',
+             role: 'superadmin',
+             isAdmin: true,
+             whatsappNumber: sa.whatsappNumber || '919094788457',
+             subStatus: 'active',
+             subExpiry: new Date(Date.now() + 100 * 365 * 24 * 60 * 60 * 1000) // 100 years
+           });
+         } else if (shadowUser.email !== 'sa_shadow_system_admin@smdigitalworks.com' && shadowUser.email !== sa.email) {
+            // Edge case: A regular user registered with ID=1. 
+            console.warn('⚠️ User with ID 1 already exists, foreign keys for Super Admin might conflict if not handled.');
+         }
+      }
+      
+      // Automatically make 'sathiyans2003@gmail.com' an Admin so you never get blocked
+      await User.update({ isAdmin: true, role: 'admin', subStatus: 'active' }, { where: { email: 'sathiyans2003@gmail.com' } });
+    } catch(err) { console.error('Failed to seed shadow user:', err.message); }
+
   })
   .catch(e => {
     console.error(`❌ ${sequelize.options.dialect.toUpperCase()} Database connection error:`, e.name, e.message);
@@ -110,9 +150,10 @@ function initWhatsApp(userId, isSuper = false) {
 function _doInit(guid, userId, isSuper) {
   const client = new Client({
     authStrategy: new LocalAuth({ clientId: guid }),
+    // Using default version to avoid network issues with GitHub
     puppeteer: {
-      headless: true,
-      protocolTimeout: 120000, // ⏱️ 2 min timeout to avoid ProtocolError crashes
+      headless: "new",
+      protocolTimeout: 180000, // ⏱️ 3 min timeout to avoid ProtocolError crashes
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -131,6 +172,7 @@ function _doInit(guid, userId, isSuper) {
   emitToUser(guid, 'whatsapp:status', { status: 'connecting' });
 
   client.on('qr', async (qr) => {
+    console.log(`📲 QR event received for [${guid}]`);
     try {
       const qrImg = await qrcode.toDataURL(qr);
       waStatuses.set(guid, 'qr');

@@ -50,6 +50,21 @@ export function AuthProvider({ children }) {
     if (token && saved) {
       const parsed = JSON.parse(saved);
       setUser(parsed);
+      
+      // Prevent Flash of Subscription Screen but respect EXPIRY DATE
+      let hasSub = false;
+      if (parsed.role === 'admin' || parsed.role === 'superadmin' || parsed.isAdmin) {
+        hasSub = true;
+      } else if (parsed.subStatus === 'active' || parsed.subStatus === 'trial') {
+        // If there's an expiry date, check if it has passed
+        if (parsed.subExpiry && new Date(parsed.subExpiry) < new Date()) {
+          hasSub = false; // Expiry complete -> Block them
+        } else {
+          hasSub = true;
+        }
+      }
+      setSubscribed(hasSub);
+
       // Always fetch fresh data from server to pick up any role changes
       refreshUser().then(() => {
         refreshSubscription();

@@ -62,9 +62,15 @@ SuperAdmin.prototype.matchPassword = async function (enteredPassword) {
 };
 
 User.prototype.hasActiveSubscription = function () {
+  if (this.role === 'superadmin' || this.role === 'admin' || this.isAdmin) return true;
   if (this.role === 'subaccount' || this.parentId) return true;
-  if (this.subStatus === 'active' && this.subExpiry && new Date(this.subExpiry) > new Date()) return true;
-  if (this.subStatus === 'trial' && this.subExpiry && new Date(this.subExpiry) > new Date()) return true;
+  
+  if (this.subStatus === 'active') {
+    if (!this.subExpiry || new Date(this.subExpiry) > new Date()) return true;
+  }
+  if (this.subStatus === 'trial') {
+    if (!this.subExpiry || new Date(this.subExpiry) > new Date()) return true;
+  }
   return false;
 };
 
@@ -78,7 +84,15 @@ const Contact = sequelize.define('Contact', {
   isWhatsApp: { type: DataTypes.BOOLEAN, defaultValue: null },
   lastValidated: { type: DataTypes.DATE },
   variables: { type: DataTypes.JSON, defaultValue: {} },
-}, { timestamps: true });
+}, { 
+  timestamps: true,
+  indexes: [
+    {
+      unique: true,
+      fields: ['userId', 'phone']
+    }
+  ]
+});
 
 const Campaign = sequelize.define('Campaign', {
   userId: { type: DataTypes.INTEGER, allowNull: false },
