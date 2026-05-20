@@ -73,26 +73,6 @@ sequelize.sync({ alter: true })
     if (e.original) console.error(e.original);
   });
 
-// ── Routes ──────────────────────────────────────────────────
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/contacts', require('./routes/contacts'));
-app.use('/api/campaigns', require('./routes/campaigns'));
-app.use('/api/autoreply', require('./routes/autoreply'));
-app.use('/api/schedule', require('./routes/schedule'));
-app.use('/api/groups', require('./routes/groups'));
-app.use('/api/dashboard', require('./routes/dashboard'));
-app.use('/api/upload', require('./routes/upload'));
-app.use('/api/global-vars', require('./routes/globalVars'));
-app.use('/api/automations', require('./routes/automations'));
-app.use('/api/payments', require('./routes/payments'));
-app.use('/api/admin', require('./routes/admin'));
-app.use('/api/support', require('./routes/support'));
-
-
-// ── Serve Frontend ───────────────────────────────────────────
-const path = require('path');
-app.use(express.static(path.join(__dirname, '../frontend/build')));
-
 // ── Per-User WhatsApp State ───────────────────────────────────
 const waClients = new Map(); // globalUid → Client (globalUid is "user_#ID" or "sa_#ID")
 const waStatuses = new Map(); // globalUid → status string
@@ -110,6 +90,7 @@ function getClient() {
 }
 app.set('whatsappClient', getClient);
 app.set('getClientForUser', getClientForUser);
+
 
 // Emit only to a specific user's socket room
 function emitToUser(guid, event, data) {
