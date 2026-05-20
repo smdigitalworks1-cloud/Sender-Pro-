@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "scripts": {
     "start": "cd backend && node server.js",
-    "build": "cd backend && npm install",
-    "postinstall": "cd frontend && npm install"
+    "build": "cd frontend && npm install && npm run build",
+    "postinstall": "cd backend && npm install && cd ../frontend && npm install"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
