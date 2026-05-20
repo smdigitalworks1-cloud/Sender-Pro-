@@ -1,36 +1,17 @@
-const express = require('express');
+const app = require('./app');
 const http = require('http');
-const cors = require('cors');
 const { sequelize } = require('./models');
 const { Server } = require('socket.io');
 const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const qrcode = require('qrcode');
 const cron = require('node-cron');
+const path = require('path');
 require('dotenv').config();
 
-const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: { origin: '*', methods: ['GET', 'POST'] }
 });
-
-app.use(cors({ origin: '*' }));
-app.use(express.json({ limit: '50mb' }));
-app.use((req, res, next) => {
-  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-  res.set('Pragma', 'no-cache');
-  res.set('Expires', '0');
-  next();
-});
-app.use('/uploads', express.static('uploads'));
-
-// ── Ensure uploads directory exists ───────────────────────────
-const fs = require('fs');
-const uploadDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-  console.log('📁 Created uploads directory');
-}
 
 // ── Global Error Catching for Puppeteer / Whatsapp-web.js Unhandled Errors
 process.on('uncaughtException', (err) => {
