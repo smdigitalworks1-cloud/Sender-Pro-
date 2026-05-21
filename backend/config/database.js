@@ -2,8 +2,30 @@ const mongoose = require('mongoose');
 require('dotenv').config({ override: true });
 
 const connectDB = async () => {
-    // If already connected or connecting, return connection
-    if (mongoose.connection.readyState === 1 || mongoose.connection.readyState === 2) {
+    // If already connected, return connection immediately
+    if (mongoose.connection.readyState === 1) {
+        return mongoose.connection;
+    }
+
+    // If currently connecting, wait until it is fully connected or fails
+    if (mongoose.connection.readyState === 2) {
+        console.log("⏳ MongoDB is currently connecting. Awaiting connection open event...");
+        await new Promise((resolve, reject) => {
+            const onOpen = () => {
+                cleanup();
+                resolve();
+            };
+            const onError = (err) => {
+                cleanup();
+                reject(err);
+            };
+            const cleanup = () => {
+                mongoose.connection.removeListener('open', onOpen);
+                mongoose.connection.removeListener('error', onError);
+            };
+            mongoose.connection.once('open', onOpen);
+            mongoose.connection.once('error', onError);
+        });
         return mongoose.connection;
     }
 
