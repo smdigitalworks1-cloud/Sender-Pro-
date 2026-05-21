@@ -282,6 +282,109 @@ router.put('/update-profile', protect, async (req, res) => {
   }
 });
 
+// SMTP Diagnostic Test Route
+router.get('/test-smtp', async (req, res) => {
+  try {
+    const nodemailer = require('nodemailer');
+    const port = parseInt(process.env.SMTP_PORT) || 587;
+    
+    console.log('--- SMTP Diagnostic Test Triggered ---');
+    console.log('Host:', process.env.SMTP_HOST);
+    console.log('Port:', port);
+    console.log('Email:', process.env.SMTP_EMAIL);
+    console.log('Password length:', process.env.SMTP_PASSWORD ? process.env.SMTP_PASSWORD.length : 0);
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: port,
+      secure: port === 465,
+      auth: {
+        user: process.env.SMTP_EMAIL,
+        pass: process.env.SMTP_PASSWORD,
+      },
+      tls: {
+        rejectUnauthorized: false
+      },
+      debug: true,
+      logger: true
+    });
+
+    const fromName = (process.env.FROM_NAME || 'Sender Pro').replace(/^["']|["']$/g, '');
+    const fromEmail = process.env.FROM_EMAIL || process.env.SMTP_EMAIL;
+    const testRecipient = req.query.email || 'smdigitalworks1@gmail.com';
+
+    const message = {
+      from: `"${fromName}" <${fromEmail}>`,
+      to: testRecipient,
+      subject: 'Sender Pro SMTP Diagnostic Test',
+      text: 'This is a diagnostic test email to verify your SMTP settings in Sender Pro.',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px;">
+          <h2 style="color: #10b981;">SMTP Diagnostic Test Successful! 🎉</h2>
+          <p>If you are reading this email, your SMTP server settings are correctly configured and connection is working perfectly!</p>
+          <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 20px 0;" />
+          <h3>Configuration Details Used:</h3>
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td style="padding: 8px 0; font-weight: bold; width: 150px;">Host:</td>
+              <td style="padding: 8px 0; color: #4b5563;">${process.env.SMTP_HOST}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; font-weight: bold;">Port:</td>
+              <td style="padding: 8px 0; color: #4b5563;">${port}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; font-weight: bold;">Secure (SSL/TLS):</td>
+              <td style="padding: 8px 0; color: #4b5563;">${port === 465 ? 'Yes (Port 465 SSL)' : 'No (STARTTLS on Port ' + port + ')'}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; font-weight: bold;">Sender Identity:</td>
+              <td style="padding: 8px 0; color: #4b5563;">"${fromName}" &lt;${fromEmail}&gt;</td>
+            </tr>
+          </table>
+          <p style="margin-top: 30px; font-size: 12px; color: #9ca3af;">This diagnostic mail was sent automatically by Sender Pro.</p>
+        </div>
+      `
+    };
+
+    const info = await transporter.sendMail(message);
+    res.json({
+      success: true,
+      message: 'SMTP Diagnostic test succeeded! Email sent successfully.',
+      messageId: info.messageId,
+      configUsed: {
+        host: process.env.SMTP_HOST,
+        port: port,
+        secure: port === 465,
+        user: process.env.SMTP_EMAIL,
+        fromName,
+        fromEmail,
+        passwordProvided: !!process.env.SMTP_PASSWORD,
+        passwordLength: process.env.SMTP_PASSWORD ? process.env.SMTP_PASSWORD.length : 0
+      }
+    });
+  } catch (error) {
+    console.error('SMTP Diagnostic Failure:', error);
+    res.status(500).json({
+      success: false,
+      message: 'SMTP Diagnostic test failed! Please see full error details below.',
+      error: error.message,
+      code: error.code,
+      command: error.command,
+      stack: error.stack,
+      configUsed: {
+        host: process.env.SMTP_HOST,
+        port: process.env.SMTP_PORT,
+        user: process.env.SMTP_EMAIL,
+        fromName: process.env.FROM_NAME,
+        fromEmail: process.env.FROM_EMAIL,
+        passwordProvided: !!process.env.SMTP_PASSWORD,
+        passwordLength: process.env.SMTP_PASSWORD ? process.env.SMTP_PASSWORD.length : 0
+      }
+    });
+  }
+});
+
 // Forgot Password
 router.post('/forgot-password', async (req, res) => {
   try {
