@@ -2,6 +2,12 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 require('dotenv').config({ override: true });
+const connectDB = require('./config/database');
+
+// Trigger MongoDB connection (Mongoose handles buffering/connecting automatically)
+connectDB().catch(err => {
+    console.error("❌ MongoDB connection error on app startup:", err.message);
+});
 
 const app = express();
 

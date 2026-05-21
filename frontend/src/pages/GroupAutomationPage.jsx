@@ -1172,6 +1172,39 @@ export default function GroupAutomationPage() {
                                             <span style={{ fontSize: 10, color: 'var(--text3)' }}>Used as the start time and the base for "Event / Appointment time" waits.</span>
                                         </div>
                                     )}
+
+                                    {/* Direct helper to select groups in settings */}
+                                    <div style={{ 
+                                        marginTop: 15, 
+                                        paddingTop: 15, 
+                                        borderTop: '1px dashed var(--border)', 
+                                        display: 'flex', 
+                                        justifyContent: 'space-between', 
+                                        alignItems: 'center' 
+                                    }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text2)' }}>
+                                            <Users2 size={14} style={{ color: 'var(--accent)' }} />
+                                            <span>
+                                                Target Groups: <b>{builderState.targetGroups.length} selected</b>
+                                            </span>
+                                        </div>
+                                        <button 
+                                            type="button" 
+                                            className="btn btn-ghost" 
+                                            onClick={() => setBuilderTab('settings')}
+                                            style={{ 
+                                                fontSize: 11, 
+                                                padding: '4px 10px', 
+                                                borderRadius: 6, 
+                                                height: 'auto',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: 4
+                                            }}
+                                        >
+                                            <Settings size={12} /> Select Groups
+                                        </button>
+                                    </div>
                                 </div>
 
                                 {/* Render connector from Start to first step */}
