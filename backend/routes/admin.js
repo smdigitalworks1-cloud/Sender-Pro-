@@ -195,7 +195,7 @@ router.post('/users', protect, adminOnly, async (req, res) => {
         syncToSheets(u).catch(e => console.error('Sheet sync failed:', e.message));
 
         // Send Welcome Email (Async)
-        const loginUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/login`;
+        const loginUrl = `${process.env.FRONTEND_URL || 'https://senderpro.smdigitalworks.com'}/login`;
         sendEmail({
             email: u.email,
             subject: 'Welcome to Sender Pro - Your Account Details',
