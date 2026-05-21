@@ -11,11 +11,17 @@ const sendEmail = async (options) => {
             user: process.env.SMTP_EMAIL,
             pass: process.env.SMTP_PASSWORD,
         },
+        tls: {
+            // Do not fail on invalid certificates
+            rejectUnauthorized: false
+        }
     });
 
     // Define email options
+    const fromName = (process.env.FROM_NAME || 'Sender Pro').replace(/^["']|["']$/g, '');
+    const fromEmail = process.env.FROM_EMAIL || process.env.SMTP_EMAIL;
     const message = {
-        from: `${process.env.FROM_NAME || 'Sender Pro'} <${process.env.FROM_EMAIL || process.env.SMTP_EMAIL}>`,
+        from: `"${fromName}" <${fromEmail}>`,
         to: options.email,
         subject: options.subject,
         text: options.message,

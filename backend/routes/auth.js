@@ -289,11 +289,18 @@ router.post('/forgot-password', async (req, res) => {
     account.resetPasswordExpire = Date.now() + 5 * 60 * 1000;
     await account.save();
 
+    let origin = req.headers.origin;
+    if (!origin && req.headers.referer) {
+      try {
+        origin = new URL(req.headers.referer).origin;
+      } catch (e) {}
+    }
     const protocol = req.headers['x-forwarded-proto'] || (req.secure ? 'https' : 'http');
     const host = req.headers.host;
-    const resetUrl = `${process.env.FRONTEND_URL || `${protocol}://${host}`}/reset-password/${resetToken}`;
+    const cleanFrontendUrl = (process.env.FRONTEND_URL || origin || `${protocol}://${host}`).replace(/\/+$/, '');
+    const resetUrl = `${cleanFrontendUrl}/reset-password/${resetToken}`;
 
-    const message = `You are receiving this email because you (or someone else) have requested the reset of a password. Please make a PUT request to: \n\n ${resetUrl}`;
+    const message = `You are receiving this email because you (or someone else) have requested the reset of a password. Please use the following link to reset your password:\n\n${resetUrl}`;
 
     try {
       await sendEmail({
@@ -302,7 +309,10 @@ router.post('/forgot-password', async (req, res) => {
         message: message,
         html: `<h3>Password Reset</h3><p>You are receiving this email because you requested the reset of your password.</p><p>Please click the link below to reset your password:</p><a href="${resetUrl}">${resetUrl}</a><br/><p>If you did not request this, please ignore this email and your password will remain unchanged.</p>`
       });
-      res.json({ message: 'Email sent' });
+      res.json({ 
+        message: 'Email sent',
+        devResetUrl: resetUrl 
+      });
     } catch (err) {
       account.resetPasswordToken = null;
       account.resetPasswordExpire = null;
@@ -313,6 +323,28 @@ router.post('/forgot-password', async (req, res) => {
   } catch (e) {
     res.status(500).json({ message: e.message });
   }
+});
+
+// GET Reset Password redirect fallback
+router.get('/reset-password/:token', (req, res) => {
+  let origin = req.headers.origin;
+  if (!origin && req.headers.referer) {
+    try {
+      origin = new URL(req.headers.referer).origin;
+    } catch (e) {}
+  }
+  const protocol = req.headers['x-forwarded-proto'] || (req.secure ? 'https' : 'http');
+  const host = req.headers.host;
+  
+  let targetUrl = process.env.FRONTEND_URL || origin || `${protocol}://${host}`;
+  targetUrl = targetUrl.replace(/\/+$/, '');
+  
+  // If the targetUrl still points to the backend (port 5000), try to replace port 5000 with 3000 as fallback
+  if (targetUrl.includes('localhost:5000')) {
+    targetUrl = targetUrl.replace('localhost:5000', 'localhost:3000');
+  }
+  
+  res.redirect(`${targetUrl}/reset-password/${req.params.token}`);
 });
 
 // Reset Password
