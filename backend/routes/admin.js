@@ -189,33 +189,41 @@ router.post('/users', protect, adminOnly, async (req, res) => {
             subExpiry: subExpiry ? new Date(subExpiry) : null,
         });
 
-        res.status(201).json({ id: u._id, name: u.name, email: u.email, subStatus: u.subStatus, subExpiry: u.subExpiry, isAdmin: u.isAdmin, parentId: u.parentId });
+        // Sync to Google Sheets (Awaited)
+        try {
+            await syncToSheets(u);
+        } catch (e) {
+            console.error('Sheet sync failed:', e.message);
+        }
 
-        // Sync to Google Sheets (Async)
-        syncToSheets(u).catch(e => console.error('Sheet sync failed:', e.message));
-
-        // Send Welcome Email (Async)
+        // Send Welcome Email (Awaited)
         const loginUrl = `${process.env.FRONTEND_URL || 'https://senderpro.smdigitalworks.com'}/login`;
-        sendEmail({
-            email: u.email,
-            subject: 'Welcome to Sender Pro - Your Account Details',
-            message: `Hello ${u.name},\nYour Sender Pro account has been created.\n\nLogin Details:\nEmail: ${u.email}\nPassword: ${password}\n\nLogin here: ${loginUrl}`,
-            html: `
-              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
-                <h2 style="color: #7c3aed;">Welcome to Sender Pro! 🎉</h2>
-                <p>Hi <strong>${u.name}</strong>,</p>
-                <p>Your account has been created successfully. Here are your login credentials:</p>
-                <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                  <p style="margin: 5px 0;"><strong>Name:</strong> ${u.name}</p>
-                  <p style="margin: 5px 0;"><strong>Email:</strong> ${u.email}</p>
-                  <p style="margin: 5px 0;"><strong>WhatsApp Number:</strong> ${u.whatsappNumber}</p>
-                  <p style="margin: 5px 0;"><strong>Password:</strong> ${password}</p>
-                </div>
-                <p>You can login to your dashboard using the link below:</p>
-                <a href="${loginUrl}" style="display: inline-block; padding: 10px 20px; background: #7c3aed; color: #fff; text-decoration: none; border-radius: 6px; font-weight: bold;">Login to Dashboard</a>
-              </div>
-            `
-        }).catch(e => console.error('Welcome email failed:', e.message));
+        try {
+            await sendEmail({
+                email: u.email,
+                subject: 'Welcome to Sender Pro - Your Account Details',
+                message: `Hello ${u.name},\nYour Sender Pro account has been created.\n\nLogin Details:\nEmail: ${u.email}\nPassword: ${password}\n\nLogin here: ${loginUrl}`,
+                html: `
+                  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+                    <h2 style="color: #7c3aed;">Welcome to Sender Pro! 🎉</h2>
+                    <p>Hi <strong>${u.name}</strong>,</p>
+                    <p>Your account has been created successfully. Here are your login credentials:</p>
+                    <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                      <p style="margin: 5px 0;"><strong>Name:</strong> ${u.name}</p>
+                      <p style="margin: 5px 0;"><strong>Email:</strong> ${u.email}</p>
+                      <p style="margin: 5px 0;"><strong>WhatsApp Number:</strong> ${u.whatsappNumber}</p>
+                      <p style="margin: 5px 0;"><strong>Password:</strong> ${password}</p>
+                    </div>
+                    <p>You can login to your dashboard using the link below:</p>
+                    <a href="${loginUrl}" style="display: inline-block; padding: 10px 20px; background: #7c3aed; color: #fff; text-decoration: none; border-radius: 6px; font-weight: bold;">Login to Dashboard</a>
+                  </div>
+                `
+            });
+        } catch (e) {
+            console.error('Welcome email failed:', e.message);
+        }
+
+        res.status(201).json({ id: u._id, name: u.name, email: u.email, subStatus: u.subStatus, subExpiry: u.subExpiry, isAdmin: u.isAdmin, parentId: u.parentId });
     } catch (e) { res.status(500).json({ message: e.message }); }
 });
 

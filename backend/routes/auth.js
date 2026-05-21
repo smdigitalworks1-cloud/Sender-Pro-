@@ -40,27 +40,31 @@ router.post('/register', async (req, res) => {
     const cleanFrontendUrl = (process.env.FRONTEND_URL || origin || `${protocol}://${host}`).replace(/\/+$/, '');
     const loginUrl = `${cleanFrontendUrl}/login`;
 
-    sendEmail({
-      email: user.email,
-      subject: 'Welcome to Sender Pro - Account Created Successfully!',
-      message: `Welcome ${user.name}!\nYour account has been created successfully.\n\nLogin Details:\nEmail: ${user.email}\nPassword: ${password}\n\nLogin here: ${loginUrl}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
-          <h2 style="color: #7c3aed;">Welcome to Sender Pro! 🎉</h2>
-          <p>Hi <strong>${user.name}</strong>,</p>
-          <p>Your account has been created successfully. Here are your account details:</p>
-          <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
-            <p style="margin: 5px 0;"><strong>Name:</strong> ${user.name}</p>
-            <p style="margin: 5px 0;"><strong>Email:</strong> ${user.email}</p>
-            <p style="margin: 5px 0;"><strong>WhatsApp Number:</strong> ${user.whatsappNumber}</p>
-            <p style="margin: 5px 0;"><strong>Password:</strong> ${password}</p>
+    try {
+      await sendEmail({
+        email: user.email,
+        subject: 'Welcome to Sender Pro - Account Created Successfully!',
+        message: `Welcome ${user.name}!\nYour account has been created successfully.\n\nLogin Details:\nEmail: ${user.email}\nPassword: ${password}\n\nLogin here: ${loginUrl}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+            <h2 style="color: #7c3aed;">Welcome to Sender Pro! 🎉</h2>
+            <p>Hi <strong>${user.name}</strong>,</p>
+            <p>Your account has been created successfully. Here are your account details:</p>
+            <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+              <p style="margin: 5px 0;"><strong>Name:</strong> ${user.name}</p>
+              <p style="margin: 5px 0;"><strong>Email:</strong> ${user.email}</p>
+              <p style="margin: 5px 0;"><strong>WhatsApp Number:</strong> ${user.whatsappNumber}</p>
+              <p style="margin: 5px 0;"><strong>Password:</strong> ${password}</p>
+            </div>
+            <p>You can login to your dashboard using the link below:</p>
+            <a href="${loginUrl}" style="display: inline-block; padding: 10px 20px; background: #7c3aed; color: #fff; text-decoration: none; border-radius: 6px; font-weight: bold;">Login to Dashboard</a>
+            <p style="margin-top: 30px; font-size: 12px; color: #666;">If you didn't request this account, please ignore this email.</p>
           </div>
-          <p>You can login to your dashboard using the link below:</p>
-          <a href="${loginUrl}" style="display: inline-block; padding: 10px 20px; background: #7c3aed; color: #fff; text-decoration: none; border-radius: 6px; font-weight: bold;">Login to Dashboard</a>
-          <p style="margin-top: 30px; font-size: 12px; color: #666;">If you didn't request this account, please ignore this email.</p>
-        </div>
-      `
-    }).catch(e => console.error('Welcome email failed:', e.message));
+        `
+      });
+    } catch (e) {
+      console.error('Welcome email failed:', e.message);
+    }
 
     res.status(201).json({
       id: user._id, name: user.name, email: user.email,
@@ -93,12 +97,16 @@ router.post('/login', async (req, res) => {
 
     // Send OTP Email
     console.log(`\n🔐 LOGIN OTP for ${user.email}: ${otp} (Expires in 5 mins)\n`);
-    sendEmail({
-      email: user.email,
-      subject: 'Login OTP - Sender Pro',
-      message: `Your login OTP is: ${otp}. It will expire in 5 minutes.`,
-      html: `<h3>Login Verification</h3><p>Your login OTP is: <strong style="font-size: 24px; color: #7c3aed;">${otp}</strong></p><p>This code will expire in 5 minutes.</p>`
-    }).catch(e => console.error('OTP email send failed (check SMTP config):', e.message));
+    try {
+      await sendEmail({
+        email: user.email,
+        subject: 'Login OTP - Sender Pro',
+        message: `Your login OTP is: ${otp}. It will expire in 5 minutes.`,
+        html: `<h3>Login Verification</h3><p>Your login OTP is: <strong style="font-size: 24px; color: #7c3aed;">${otp}</strong></p><p>This code will expire in 5 minutes.</p>`
+      });
+    } catch (e) {
+      console.error('OTP email send failed (check SMTP config):', e.message);
+    }
 
     res.json({ message: 'OTP sent to email', requiresOtp: true });
   } catch (e) {
@@ -155,12 +163,16 @@ router.post('/admin-login', async (req, res) => {
 
     // Send OTP Email
     console.log(`\n👑 ADMIN LOGIN OTP for ${admin.email}: ${otp} (Expires in 5 mins)\n`);
-    sendEmail({
-      email: admin.email,
-      subject: 'Super Admin Login OTP',
-      message: `Your Super Admin login OTP is: ${otp}.`,
-      html: `<h3>Admin Verification</h3><p>Your Super Admin login OTP is: <strong style="font-size: 24px; color: #f59e0b;">${otp}</strong></p><p>This code will expire in 5 minutes.</p>`
-    }).catch(e => console.error('Admin OTP email send failed:', e.message));
+    try {
+      await sendEmail({
+        email: admin.email,
+        subject: 'Super Admin Login OTP',
+        message: `Your Super Admin login OTP is: ${otp}.`,
+        html: `<h3>Admin Verification</h3><p>Your Super Admin login OTP is: <strong style="font-size: 24px; color: #f59e0b;">${otp}</strong></p><p>This code will expire in 5 minutes.</p>`
+      });
+    } catch (e) {
+      console.error('Admin OTP email send failed:', e.message);
+    }
 
     res.json({ message: 'OTP sent to email', requiresOtp: true });
   } catch (e) {
