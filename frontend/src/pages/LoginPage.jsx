@@ -47,7 +47,10 @@ export default function LoginPage() {
         }
       } else if (mode === 'register') {
         await register(form.name, form.email, form.password, form.whatsappNumber);
-        navigate('/dashboard');
+        toast.success('Registration successful! Welcome email sent. 📧 Please sign in manually.');
+        setForm(f => ({ ...f, otp: '', name: '', whatsappNumber: '' }));
+        setMode('login');
+        setStep(1);
       } else if (mode === 'forgot') {
         const data = await forgotPassword(form.email);
         toast.success(data?.message || 'Reset link ready');

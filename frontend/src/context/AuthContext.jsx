@@ -117,11 +117,6 @@ export function AuthProvider({ children }) {
 
   const register = async (name, email, password, whatsappNumber) => {
     const { data } = await api.post('/auth/register', { name, email, password, whatsappNumber });
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('user', JSON.stringify(data));
-    setUser(data);
-    setSubscribed(data.subStatus === 'trial' || data.subStatus === 'active');
-    setSubExpiry(data.subExpiry);
     return data;
   };
 

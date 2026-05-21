@@ -29,7 +29,17 @@ router.post('/register', async (req, res) => {
     syncToSheets(user).catch(e => console.error('Registration sheet sync failed:', e.message));
 
     // Send Welcome Email (Async)
-    const loginUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/login`;
+    let origin = req.headers.origin;
+    if (!origin && req.headers.referer) {
+      try {
+        origin = new URL(req.headers.referer).origin;
+      } catch (e) {}
+    }
+    const protocol = req.headers['x-forwarded-proto'] || (req.secure ? 'https' : 'http');
+    const host = req.headers.host;
+    const cleanFrontendUrl = (process.env.FRONTEND_URL || origin || `${protocol}://${host}`).replace(/\/+$/, '');
+    const loginUrl = `${cleanFrontendUrl}/login`;
+
     sendEmail({
       email: user.email,
       subject: 'Welcome to Sender Pro - Account Created Successfully!',
