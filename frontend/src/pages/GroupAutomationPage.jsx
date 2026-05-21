@@ -5,7 +5,7 @@ import { Plus, Folder, FileText, X, ArrowLeft, Users2, Play, Pause, Trash2, Cloc
 import { useAuth } from '../context/AuthContext';
 import { io } from 'socket.io-client';
 
-const SOCKET_URL = process.env.NODE_ENV === 'development' ? 'http://localhost:5000' : window.location.origin;
+const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:5000' : window.location.origin);
 
 const COMMON_EMOJIS = ['😊', '😂', '❤️', '👍', '🙏', '🔥', '✨', '🎉', '✅', '❌', '🛑', '👇', '👉', '🚀', '💰'];
 

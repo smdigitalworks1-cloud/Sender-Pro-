@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth } from '../context/AuthContext';
 
-const SOCKET_URL = process.env.NODE_ENV === 'development' ? 'http://localhost:5000' : window.location.origin;
+const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:5000' : window.location.origin);
 
 export function useWhatsApp() {
   const { user } = useAuth();
