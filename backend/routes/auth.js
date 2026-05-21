@@ -289,7 +289,9 @@ router.post('/forgot-password', async (req, res) => {
     account.resetPasswordExpire = Date.now() + 5 * 60 * 1000;
     await account.save();
 
-    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password/${resetToken}`;
+    const protocol = req.headers['x-forwarded-proto'] || (req.secure ? 'https' : 'http');
+    const host = req.headers.host;
+    const resetUrl = `${process.env.FRONTEND_URL || `${protocol}://${host}`}/reset-password/${resetToken}`;
 
     const message = `You are receiving this email because you (or someone else) have requested the reset of a password. Please make a PUT request to: \n\n ${resetUrl}`;
 
